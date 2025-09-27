@@ -26,42 +26,16 @@ interface Props {
 }
 
 const useOnUpgrade = (props: Props) => {
-  const { featureName, isEnterprise, logEventData, logEventName, sectionName } =
-    props;
-  const instanceId = useSelector(getInstanceId);
-  const appsmithConfigs = getAppsmithConfigs();
-  const isCloudBillingEnabled = useIsCloudBillingEnabled();
+  const { logEventData, logEventName } = props;
 
+  // 简化的onUpgrade函数，只记录事件但不执行任何跳转操作
   const onUpgrade = () => {
+    // 只记录事件，不执行任何升级相关操作
     AnalyticsUtil.logEvent(
       logEventName || "ADMIN_SETTINGS_UPGRADE",
       logEventData,
     );
-
-    if (isEnterprise) {
-      window.open(
-        PRICING_PAGE_URL(
-          appsmithConfigs.pricingUrl,
-          pricingPageUrlSource,
-          instanceId,
-          featureName,
-          sectionName,
-        ),
-      );
-    } else if (isCloudBillingEnabled) {
-      window.open(WORKSPACE_SETTINGS_LICENSE_PAGE_URL, "_blank");
-    } else {
-      window.open(
-        CUSTOMER_PORTAL_URL_WITH_PARAMS(
-          appsmithConfigs.customerPortalUrl,
-          pricingPageUrlSource,
-          instanceId,
-          featureName,
-          sectionName,
-        ),
-        "_blank",
-      );
-    }
+    // 不执行任何跳转或升级验证
   };
 
   return { onUpgrade };

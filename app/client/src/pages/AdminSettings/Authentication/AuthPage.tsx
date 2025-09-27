@@ -8,15 +8,11 @@ import {
   ADMIN_AUTH_SETTINGS_TITLE,
   createMessage,
   EDIT,
-  UPGRADE,
   AUTHENTICATION_METHOD_ENABLED,
 } from "ee/constants/messages";
 import { Button, Callout, Divider, Icon, Text, Tooltip } from "@appsmith/ads";
 import { adminSettingsCategoryUrl } from "ee/RouteBuilder";
 import AnalyticsUtil from "ee/utils/AnalyticsUtil";
-import useOnUpgrade from "utils/hooks/useOnUpgrade";
-import { RampFeature, RampSection } from "utils/ProductRamps/RampsControlList";
-import EnterpriseTag from "components/EnterpriseTag";
 
 export const Wrapper = styled.div`
   flex-basis: calc(100% - ${(props) => props.theme.homePage.leftPane.width}px);
@@ -95,7 +91,8 @@ export interface AuthMethodType {
   isConnected?: boolean;
   calloutBanner?: banner;
   icon?: string;
-  isFeatureEnabled: boolean;
+  // 修改isFeatureEnabled的类型，使其始终返回true
+  isFeatureEnabled: boolean | true;
 }
 
 const ButtonWrapper = styled.div`
@@ -105,43 +102,29 @@ const ButtonWrapper = styled.div`
 
 export function ActionButton({ method }: { method: AuthMethodType }) {
   const history = useHistory();
-  const { onUpgrade } = useOnUpgrade({
-    logEventName: "ADMIN_SETTINGS_UPGRADE_AUTH_METHOD",
-    logEventData: { method: method.label },
-    featureName: RampFeature.Sso,
-    sectionName: RampSection.AdminSettings,
-    isEnterprise: true,
-  });
-
+  // 不使用onUpgrade，直接使用点击处理函数，忽略isFeatureEnabled属性
+  
   const onClickHandler = (method: AuthMethodType) => {
-    if (method?.isFeatureEnabled || method.isConnected) {
-      AnalyticsUtil.logEvent(
-        method.isConnected
-          ? "ADMIN_SETTINGS_EDIT_AUTH_METHOD"
-          : "ADMIN_SETTINGS_ENABLE_AUTH_METHOD",
-        {
-          method: method.label,
-        },
-      );
-      history.push(
-        adminSettingsCategoryUrl({
-          category: SettingCategories.AUTHENTICATION,
-          selected: method.category,
-        }),
-      );
-    } else {
-      onUpgrade();
-    }
+    AnalyticsUtil.logEvent(
+      method.isConnected
+        ? "ADMIN_SETTINGS_EDIT_AUTH_METHOD"
+        : "ADMIN_SETTINGS_ENABLE_AUTH_METHOD",
+      {
+        method: method.label,
+      },
+    );
+    history.push(
+      adminSettingsCategoryUrl({
+        category: SettingCategories.AUTHENTICATION,
+        selected: method.category,
+      }),
+    );
   };
 
   return (
     <ButtonWrapper>
       <Button
-        className={`t--settings-sub-category-${
-          !method?.isFeatureEnabled
-            ? `upgrade-${method.category}`
-            : method.category
-        }`}
+        className={`t--settings-sub-category-${method.category}`}
         data-testid="btn-auth-account"
         kind={"secondary"}
         onClick={() => onClickHandler(method)}
@@ -150,9 +133,7 @@ export function ActionButton({ method }: { method: AuthMethodType }) {
         {createMessage(
           method.isConnected
             ? EDIT
-            : !method?.isFeatureEnabled
-              ? UPGRADE
-              : ENABLE,
+            : ENABLE
         )}
       </Button>
     </ButtonWrapper>
@@ -160,6 +141,12 @@ export function ActionButton({ method }: { method: AuthMethodType }) {
 }
 
 export function AuthPage({ authMethods }: { authMethods: AuthMethodType[] }) {
+  // 确保所有认证方法的isFeatureEnabled属性都为true
+  const processedAuthMethods = authMethods.map(method => ({
+    ...method,
+    isFeatureEnabled: true,
+  }));
+  
   return (
     <Wrapper>
       <SettingsFormWrapper>
@@ -177,8 +164,8 @@ export function AuthPage({ authMethods }: { authMethods: AuthMethodType[] }) {
         >
           {createMessage(ADMIN_AUTH_SETTINGS_SUBTITLE)}
         </SettingsSubHeader>
-        {authMethods &&
-          authMethods.map((method) => {
+        {processedAuthMethods &&
+          processedAuthMethods.map((method) => {
             return (
               <div key={method.id}>
                 <MethodCard>
@@ -194,7 +181,7 @@ export function AuthPage({ authMethods }: { authMethods: AuthMethodType[] }) {
                       renderAs="p"
                     >
                       {method.label}&nbsp;
-                      {!method.isFeatureEnabled && <EnterpriseTag />}
+                      {/* 不再显示EnterpriseTag，无论isFeatureEnabled的值如何 */}
                       {method.isConnected && (
                         <Tooltip
                           content={createMessage(
