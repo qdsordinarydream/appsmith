@@ -275,6 +275,50 @@ export const GithubAuth: AdminConfigType = {
   ],
 };
 
+export const OIDCAuth: AdminConfigType = {
+  type: SettingCategories.OIDC_AUTH,
+  categoryType: CategoryType.USER_MANAGEMENT,
+  controlType: SettingTypes.GROUP,
+  title: "OIDC",
+  subText: createMessage(OIDC_AUTH_DESC),
+  canSave: true,
+  settings: [
+    {
+      id: "APPSMITH_OIDC_CLIENT_ID",
+      category: SettingCategories.OIDC_AUTH,
+      controlType: SettingTypes.TEXTINPUT,
+      controlSubType: SettingSubtype.TEXT,
+      label: "Client ID",
+      isRequired: true,
+    },
+    {
+      id: "APPSMITH_OIDC_CLIENT_SECRET",
+      category: SettingCategories.OIDC_AUTH,
+      controlType: SettingTypes.TEXTINPUT,
+      controlSubType: SettingSubtype.TEXT,
+      label: "Client secret",
+      isRequired: true,
+    },
+    {
+      id: "APPSMITH_OIDC_ISSUER_URI",
+      category: SettingCategories.OIDC_AUTH,
+      controlType: SettingTypes.TEXTINPUT,
+      controlSubType: SettingSubtype.TEXT,
+      label: "Issuer URI",
+      isRequired: true,
+    },
+    {
+      id: "APPSMITH_OIDC_SCOPE",
+      category: SettingCategories.OIDC_AUTH,
+      controlType: SettingTypes.TEXTINPUT,
+      controlSubType: SettingSubtype.TEXT,
+      label: "Scope",
+      placeholder: "openid profile email",
+      isRequired: true,
+    },
+  ],
+};
+
 export const FormAuthCallout: AuthMethodType = {
   id: "APPSMITH_FORM_LOGIN_AUTH",
   category: SettingCategories.FORM_AUTH,
@@ -318,7 +362,7 @@ export const OidcAuthCallout: AuthMethodType = {
   label: "OIDC",
   subText: createMessage(OIDC_AUTH_DESC),
   image: OIDC,
-  isFeatureEnabled: isOIDCEnabled(featureFlags),
+  isFeatureEnabled: true,
 };
 
 const AuthMethods = [
@@ -348,6 +392,6 @@ export const config: AdminConfigType = {
   controlType: SettingTypes.PAGE,
   title: "Authentication",
   canSave: false,
-  children: [FormAuth, GoogleAuth, GithubAuth],
+  children: [FormAuth, GoogleAuth, GithubAuth, OIDCAuth],
   component: AuthMain,
 };
