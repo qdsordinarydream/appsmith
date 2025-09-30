@@ -1,4 +1,4 @@
-import { GoogleOAuthURL, GithubOAuthURL } from "ee/constants/ApiConstants";
+import { GithubOAuthURL } from "ee/constants/ApiConstants";
 
 import GithubLogo from "assets/images/Github.png";
 import GoogleLogo from "assets/images/Google.png";
@@ -9,9 +9,10 @@ export interface SocialLoginButtonProps {
   label?: string;
 }
 
+// todo 这里还需要修改参数
 export const GoogleSocialLoginButtonProps: SocialLoginButtonProps = {
-  url: GoogleOAuthURL,
-  name: "Google",
+  url: "/api/v1/oauth/dingtalk/authorize", // 直接跳转到钉钉授权端点
+  name: "DingDing",
   logo: GoogleLogo,
 };
 

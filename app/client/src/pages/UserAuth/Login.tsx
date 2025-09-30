@@ -101,6 +101,7 @@ export function Login(props: LoginFormProps) {
   const isFormValid = valid && email && !isEmptyString(email);
   const location = useLocation();
   const isFormLoginEnabled = useSelector(getIsFormLoginEnabled);
+  // 入口
   const socialLoginList = useSelector(getThirdPartyAuths);
   const queryParams = new URLSearchParams(location.search);
   const isBrandingEnabled = useFeatureFlag(

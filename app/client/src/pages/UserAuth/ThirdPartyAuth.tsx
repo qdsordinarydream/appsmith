@@ -30,6 +30,7 @@ const startIcon: {
   Github: "github-fill",
 };
 
+// 发起请求
 function SocialLoginButton(props: {
   logo: string;
   name: string;

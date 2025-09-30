@@ -78,6 +78,7 @@ import static com.appsmith.server.constants.EnvVariables.APPSMITH_MAIL_PASSWORD;
 import static com.appsmith.server.constants.EnvVariables.APPSMITH_MAIL_PORT;
 import static com.appsmith.server.constants.EnvVariables.APPSMITH_MAIL_SMTP_AUTH;
 import static com.appsmith.server.constants.EnvVariables.APPSMITH_MAIL_USERNAME;
+import static com.appsmith.server.constants.EnvVariables.APPSMITH_OAUTH2_DINGTALK_CLIENT_ID;
 import static com.appsmith.server.constants.EnvVariables.APPSMITH_OAUTH2_GITHUB_CLIENT_ID;
 import static com.appsmith.server.constants.EnvVariables.APPSMITH_OAUTH2_GOOGLE_CLIENT_ID;
 import static com.appsmith.server.constants.EnvVariables.APPSMITH_RECAPTCHA_SECRET_KEY;
@@ -567,8 +568,10 @@ public class EnvManagerCEImpl implements EnvManagerCE {
      */
     public List<Map<String, Object>> getAnalyticsEvents(
             Map<String, String> originalVariables, Map<String, String> changes, List<String> extraAuthEnvs) {
-        List<String> authEnvs = new ArrayList<>(
-                List.of(APPSMITH_OAUTH2_GOOGLE_CLIENT_ID.name(), APPSMITH_OAUTH2_GITHUB_CLIENT_ID.name()));
+        List<String> authEnvs = new ArrayList<>(List.of(
+                APPSMITH_OAUTH2_GOOGLE_CLIENT_ID.name(),
+                APPSMITH_OAUTH2_GITHUB_CLIENT_ID.name(),
+                APPSMITH_OAUTH2_DINGTALK_CLIENT_ID.name()));
 
         // Add extra authentication methods
         authEnvs.addAll(extraAuthEnvs);
