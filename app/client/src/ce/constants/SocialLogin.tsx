@@ -1,7 +1,13 @@
-import { GithubOAuthURL } from "ee/constants/ApiConstants";
+import {
+  DingTalkOAuthURL,
+  GithubOAuthURL,
+  GoogleOAuthURL,
+} from "ee/constants/ApiConstants";
 
 import GithubLogo from "assets/images/Github.png";
 import GoogleLogo from "assets/images/Google.png";
+import DingtalkLogo from "assets/images/Dingtalk.jpeg";
+
 export interface SocialLoginButtonProps {
   url: string;
   name: string;
@@ -9,11 +15,16 @@ export interface SocialLoginButtonProps {
   label?: string;
 }
 
-// todo 这里还需要修改参数
 export const GoogleSocialLoginButtonProps: SocialLoginButtonProps = {
-  url: "/api/v1/oauth/dingtalk/authorize", // 直接跳转到钉钉授权端点
-  name: "DingDing",
+  url: GoogleOAuthURL,
+  name: "Google",
   logo: GoogleLogo,
+};
+
+export const DingTalkSocialLoginButtonProps: SocialLoginButtonProps = {
+  url: DingTalkOAuthURL,
+  name: "DingTalk",
+  logo: DingtalkLogo,
 };
 
 export const GithubSocialLoginButtonProps: SocialLoginButtonProps = {
@@ -28,6 +39,7 @@ export const SocialLoginButtonPropsList: Record<
 > = {
   google: GoogleSocialLoginButtonProps,
   github: GithubSocialLoginButtonProps,
+  dingtalk: DingTalkSocialLoginButtonProps,
 };
 
 export type SocialLoginType = keyof typeof SocialLoginButtonPropsList;

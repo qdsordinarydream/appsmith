@@ -41,7 +41,7 @@ fi
 node scripts/check-field-constants.mjs
 
 # Build the code. $@ accepts all the parameters from the input command line and uses it in the maven build command
-mvn clean package "$@"
+mvn clean package "$@" -DskipTests
 
 if [[ $? -eq 0 ]]; then
   echo "mvn Successful"

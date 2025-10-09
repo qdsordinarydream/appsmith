@@ -552,6 +552,9 @@ const GoogleFillIcon = importRemixIcon(
 const GithubFillIcon = importRemixIcon(
   async () => import("remixicon-react/GithubFillIcon"),
 );
+const DingTalkIcon = importRemixIcon(
+  async () => import("remixicon-react/DingdingFillIcon"),
+);
 const PlayLineIcon = importRemixIcon(
   async () => import("remixicon-react/PlayLineIcon"),
 );
@@ -1365,6 +1368,7 @@ const ICON_LOOKUP = {
   "git-pull-request": GitPullRequest,
   "git-repository": GitRepository,
   "github-fill": GithubFillIcon,
+  "dingtalk": DingTalkIcon,
   "global-line": GlobalLineIcon,
   "google-colored": GoogleColoredIcon,
   "google-fill": GoogleFillIcon,

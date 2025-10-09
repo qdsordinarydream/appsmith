@@ -167,9 +167,12 @@ public class OrganizationServiceCEImpl extends BaseService<OrganizationRepositor
                     final OrganizationConfiguration config = new OrganizationConfiguration();
                     organization.setOrganizationConfiguration(config);
 
-                    if (StringUtils.hasText(System.getenv("APPSMITH_OAUTH2_GOOGLE_CLIENT_ID"))) {
-                        config.addThirdPartyAuth("google");
-                    }
+                    // 默认钉钉登陆
+                    config.addThirdPartyAuth("dingtalk");
+
+//                    if (StringUtils.hasText(System.getenv("APPSMITH_OAUTH2_GOOGLE_CLIENT_ID"))) {
+//                        config.addThirdPartyAuth("google");
+//                    }
 
                     if (StringUtils.hasText(System.getenv("APPSMITH_OAUTH2_GITHUB_CLIENT_ID"))) {
                         config.addThirdPartyAuth("github");

@@ -24,10 +24,22 @@ const StyledButton = styled(Button)`
 type SignInType = "SIGNIN" | "SIGNUP";
 
 const startIcon: {
-  [key: string]: string;
+  [key: string]: string | JSX.Element;
 } = {
   Google: "google-colored",
   Github: "github-fill",
+  DingTalk: (
+    <img
+      alt="DingTalk"
+      src={require("assets/images/Dingtalk.jpeg")}
+      style={{
+        width: 20,
+        height: 20,
+        borderRadius: 3,
+        verticalAlign: "middle",
+      }}
+    />
+  ),
 };
 
 // 发起请求
@@ -71,7 +83,7 @@ function SocialLoginButton(props: {
       renderAs="a"
       size="md"
       startIcon={
-        ["Google", "Github"].includes(props.name)
+        ["Google", "Github", "DingTalk"].includes(props.name)
           ? startIcon[props.name]
           : "key-2-line"
       }
