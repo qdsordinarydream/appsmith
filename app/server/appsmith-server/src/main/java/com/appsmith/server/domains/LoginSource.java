@@ -11,9 +11,10 @@ public enum LoginSource {
     FORM,
     GITHUB,
     KEYCLOAK,
-    OIDC;
+    OIDC,
+    DINGTALK;
 
-    public static final Set<LoginSource> oauthSources = Set.of(GOOGLE, GITHUB, KEYCLOAK, OIDC);
+    public static final Set<LoginSource> oauthSources = Set.of(GOOGLE, GITHUB, KEYCLOAK, OIDC, DINGTALK);
 
     public static LoginSource fromString(String name) {
         return EnumUtils.getEnumFromString(LoginSource.class, name);
