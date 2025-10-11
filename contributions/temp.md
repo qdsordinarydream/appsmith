@@ -1,3 +1,4 @@
+------------- server -------------
 -- start mongo
 -- docker run -d -p 127.0.0.1:27017:27017 --name appsmith-mongodb -e MONGO_INITDB_DATABASE=appsmith -v
 /Users/mbj0030/Downloads/temp/mongo:/data/db mongo
@@ -37,3 +38,20 @@ export APPSMITH_MAIL_ENABLED=false export APPSMITH_ENCRYPTION_PASSWORD=abcd expo
 
 -- 启动服务
 ./scripts/start-dev-server.sh
+
+
+------------- client --------------
+-- 安装证书依赖
+  brew install mkcert
+-- 以下执行可能会有环境问题
+  cd app/client/docker && mkcert -install && mkcert "*.appsmith.com" && cd ../../..
+-- 配置hosts
+  echo "127.0.0.1 dev.appsmith.com" | sudo tee -a /etc/hosts
+-- 设置环境变量
+  cp .env.example .env
+-- 启动后端代理
+  cd app/client
+  -- 开发环境直接 ./start-https.sh --with-docker，修改 nginx/nginx.dev.conf 代理到后端地址
+  ./start-https.sh https://release.app.appsmith.com
+-- 代码构建和运行
+  yarn install & yarn build && yarn start
