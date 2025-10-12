@@ -55,3 +55,4 @@ export APPSMITH_MAIL_ENABLED=false export APPSMITH_ENCRYPTION_PASSWORD=abcd expo
   ./start-https.sh https://release.app.appsmith.com
 -- 代码构建和运行
   yarn install & yarn build && yarn start
+

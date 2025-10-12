@@ -76,7 +76,7 @@ else
 fi
 
 if [[ -z "$tag" ]]; then
-  tag=latest
+  tag=stridemobi
 fi
 pretty_print "Building Appsmith with tag: $tag"
 edition=ce
@@ -120,5 +120,5 @@ docker build -t appsmith/appsmith-local-$edition:$tag \
   > /dev/null
 pretty_print "Docker image build successful. Triggering run now ..."
 
-(docker stop appsmith || true) && (docker rm appsmith || true)
-docker run -d --name appsmith -p 80:80 -v "$PWD/stacks:/appsmith-stacks" appsmith/appsmith-local-$edition:$tag && sleep 15 && pretty_print "Local instance is up! Open Appsmith at http://localhost! "
+#(docker stop appsmith || true) && (docker rm appsmith || true)
+#docker run -d --name appsmith -p 80:80 -v "$PWD/stacks:/appsmith-stacks" appsmith/appsmith-local-$edition:$tag && sleep 15 && pretty_print "Local instance is up! Open Appsmith at http://localhost! "
