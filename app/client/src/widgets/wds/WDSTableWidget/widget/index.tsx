@@ -333,38 +333,22 @@ export class WDSTableWidget extends BaseWidget<TableWidgetProps, WidgetState> {
     const newTableColumns: Record<string, ColumnProperties> = {};
     const allPosibleColumnsKeys: string[] = getAllTableColumnKeys(tableData);
 
-    /*
-     * Generate default column properties for all columns
-     * But do not replace existing columns with the same id
-     */
     allPosibleColumnsKeys.forEach((columnKey, index) => {
-      const existingColumn = this.getColumnByOriginalId(columnKey);
-
-      if (!!existingColumn) {
-        // Use the existing column properties
-        newTableColumns[existingColumn.id] = existingColumn;
-      } else {
-        const hashedColumnKey = sanitizeKey(columnKey, {
-          existingKeys: union(
-            existingColumnsKeys,
-            Object.keys(newTableColumns),
-          ),
-        });
-        // Create column properties for the new column
-        const columnType = getColumnType(tableData, columnKey);
-        const columnProperties = getDefaultColumnProperties(
-          columnKey,
-          hashedColumnKey,
-          index,
-          this.props.widgetName,
-          false,
-          columnType,
-        );
-
-        newTableColumns[columnProperties.id] = {
-          ...columnProperties,
-        };
-      }
+      const hashedColumnKey = sanitizeKey(columnKey, {
+        existingKeys: union(existingColumnsKeys, Object.keys(newTableColumns)),
+      });
+      const columnType = getColumnType(tableData, columnKey);
+      const columnProperties = getDefaultColumnProperties(
+        columnKey,
+        hashedColumnKey,
+        index,
+        this.props.widgetName,
+        false,
+        columnType,
+      );
+      newTableColumns[columnProperties.id] = {
+        ...columnProperties,
+      };
     });
 
     const derivedColumns: Record<string, ColumnProperties> =
@@ -380,14 +364,7 @@ export class WDSTableWidget extends BaseWidget<TableWidgetProps, WidgetState> {
       newTableColumns[derivedColumn.id] = derivedColumn;
     });
 
-    const newColumnIds = Object.keys(newTableColumns);
-
-    // check if the columns ids differ
-    if (_.xor(existingColumnsKeys, newColumnIds).length > 0) {
-      return newTableColumns;
-    } else {
-      return;
-    }
+    return newTableColumns;
   };
 
   /*
@@ -406,93 +383,55 @@ export class WDSTableWidget extends BaseWidget<TableWidgetProps, WidgetState> {
 
       const newColumnIds = Object.keys(tableColumns);
 
-      //Check if there is any difference in the existing and new columns ids
-      if (_.xor(existingColumnIds, newColumnIds).length > 0) {
-        const newColumnIdsToAdd = _.without(newColumnIds, ...existingColumnIds);
-
-        const propertiesToAdd: Record<string, unknown> = {};
-
-        newColumnIdsToAdd.forEach((columnId: string) => {
-          // id could be an empty string
-          if (!!columnId) {
-            Object.entries(tableColumns[columnId]).forEach(([key, value]) => {
-              propertiesToAdd[`primaryColumns.${columnId}.${key}`] = value;
-            });
-          }
-        });
-
-        /*
-         * If new columnOrders have different values from the original columnOrders
-         * Only update when there are new Columns(Derived or Primary)
-         */
-        if (
-          !!newColumnIds.length &&
-          !!_.xor(newColumnIds, columnOrder).length &&
-          !equal(_.sortBy(newColumnIds), _.sortBy(existingDerivedColumnIds))
-        ) {
-          // Maintain original columnOrder and keep new columns at the end
-          let newColumnOrder = _.intersection(columnOrder, newColumnIds);
-
-          newColumnOrder = _.union(newColumnOrder, newColumnIds);
-
-          const compareColumns = (a: string, b: string) => {
-            const aSticky = tableColumns[a].sticky || "none";
-            const bSticky = tableColumns[b].sticky || "none";
-
-            if (aSticky === bSticky) {
-              return 0;
-            }
-
-            return SORT_ORDER[aSticky] - SORT_ORDER[bSticky];
-          };
-
-          // Sort the column order to retain the position of frozen columns
-          newColumnOrder.sort(compareColumns);
-
-          propertiesToAdd["columnOrder"] = newColumnOrder;
-
-          /**
-           * As the table data changes in Deployed app, we also update the local storage.
-           *
-           * this.updateColumnProperties gets executed on mount and on update of the component.
-           * On mount we get new tableColumns that may not have any sticky columns.
-           * This will lead to loss of sticky column that were frozen by the user.
-           * To avoid this and to maintain user's sticky columns we use shouldPersistLocalOrderWhenTableDataChanges below
-           * so as to avoid updating the local storage on mount.
-           **/
-          if (
-            this.props.renderMode === RenderModes.PAGE &&
-            shouldPersistLocalOrderWhenTableDataChanges
-          ) {
-            const leftOrder = newColumnOrder.filter(
-              (col: string) => tableColumns[col].sticky === StickyType.LEFT,
-            );
-            const rightOrder = newColumnOrder.filter(
-              (col: string) => tableColumns[col].sticky === StickyType.RIGHT,
-            );
-
-            this.persistColumnOrder(newColumnOrder, leftOrder, rightOrder);
-          }
-        }
-
-        const propertiesToUpdate: BatchPropertyUpdatePayload = {
-          modify: propertiesToAdd,
-        };
-
-        const pathsToDelete: string[] = [];
-        const columnsIdsToDelete = without(existingColumnIds, ...newColumnIds);
-
-        if (!!columnsIdsToDelete.length) {
-          columnsIdsToDelete.forEach((id: string) => {
-            if (!primaryColumns[id].isDerived) {
-              pathsToDelete.push(`primaryColumns.${id}`);
-            }
+      const propertiesToAdd: Record<string, unknown> = {};
+      newColumnIds.forEach((columnId: string) => {
+        if (!!columnId) {
+          Object.entries(tableColumns[columnId]).forEach(([key, value]) => {
+            propertiesToAdd[`primaryColumns.${columnId}.${key}`] = value;
           });
-          propertiesToUpdate.remove = pathsToDelete;
         }
+      });
 
-        super.batchUpdateWidgetProperty(propertiesToUpdate, false);
+      let newColumnOrder = _.union([], newColumnIds);
+      const compareColumns = (a: string, b: string) => {
+        const aSticky = tableColumns[a].sticky || "none";
+        const bSticky = tableColumns[b].sticky || "none";
+        if (aSticky === bSticky) {
+          return 0;
+        }
+        return SORT_ORDER[aSticky] - SORT_ORDER[bSticky];
+      };
+      newColumnOrder.sort(compareColumns);
+      propertiesToAdd["columnOrder"] = newColumnOrder;
+
+      if (
+        this.props.renderMode === RenderModes.PAGE &&
+        shouldPersistLocalOrderWhenTableDataChanges
+      ) {
+        const leftOrder = newColumnOrder.filter(
+          (col: string) => tableColumns[col].sticky === StickyType.LEFT,
+        );
+        const rightOrder = newColumnOrder.filter(
+          (col: string) => tableColumns[col].sticky === StickyType.RIGHT,
+        );
+        this.persistColumnOrder(newColumnOrder, leftOrder, rightOrder);
       }
+
+      const propertiesToUpdate: BatchPropertyUpdatePayload = {
+        modify: propertiesToAdd,
+      };
+
+      const pathsToDelete: string[] = [];
+      existingColumnIds.forEach((id: string) => {
+        if (!primaryColumns[id].isDerived) {
+          pathsToDelete.push(`primaryColumns.${id}`);
+        }
+      });
+      if (pathsToDelete.length) {
+        propertiesToUpdate.remove = pathsToDelete;
+      }
+
+      super.batchUpdateWidgetProperty(propertiesToUpdate, false);
     }
   };
 
@@ -654,22 +593,11 @@ export class WDSTableWidget extends BaseWidget<TableWidgetProps, WidgetState> {
 
       pushBatchMetaUpdates("triggeredRowIndex", -1);
 
-      const newColumnIds: string[] = getAllTableColumnKeys(
-        this.props.tableData,
-      );
-      const primaryColumnIds = Object.keys(primaryColumns).filter(
-        (id: string) => !primaryColumns[id].isDerived,
-      );
-
-      if (xor(newColumnIds, primaryColumnIds).length > 0) {
-        const newTableColumns = this.createTablePrimaryColumns();
-
-        if (newTableColumns) {
-          this.updateColumnProperties(newTableColumns, isTableDataModified);
-        }
-
-        pushBatchMetaUpdates("filters", []);
+      const newTableColumns = this.createTablePrimaryColumns();
+      if (newTableColumns) {
+        this.updateColumnProperties(newTableColumns, isTableDataModified);
       }
+      pushBatchMetaUpdates("filters", []);
     }
 
     /*
