@@ -380,10 +380,27 @@ export class WDSTableWidget extends BaseWidget<TableWidgetProps, WidgetState> {
       newTableColumns[derivedColumn.id] = derivedColumn;
     });
 
-    const newColumnIds = Object.keys(newTableColumns);
+    // Build column IDs in the correct order: primary columns first (from query order), then derived columns
+    const primaryColumnIds = allPosibleColumnsKeys.map((columnKey) => {
+      const existingColumn = this.getColumnByOriginalId(columnKey);
+      if (existingColumn) {
+        return existingColumn.id;
+      }
+      // For new columns, find the sanitized id in newTableColumns
+      const column = Object.values(newTableColumns).find(
+        (col) => col.originalId === columnKey,
+      );
+      return column?.id;
+    }).filter(Boolean) as string[];
+
+    const derivedColumnIds = updatedDerivedColumns.map((col) => col.id);
+    const newColumnIds = [...primaryColumnIds, ...derivedColumnIds];
 
     // check if the columns ids differ
     if (_.xor(existingColumnsKeys, newColumnIds).length > 0) {
+      // Store the column order information in the returned object
+      // This will be used by updateColumnProperties
+      (newTableColumns as any).__columnOrder = newColumnIds;
       return newTableColumns;
     } else {
       return;
@@ -404,7 +421,8 @@ export class WDSTableWidget extends BaseWidget<TableWidgetProps, WidgetState> {
       const existingColumnIds = Object.keys(primaryColumns);
       const existingDerivedColumnIds = Object.keys(derivedColumns);
 
-      const newColumnIds = Object.keys(tableColumns);
+      // Use the explicit column order if provided, otherwise use Object.keys
+      const newColumnIds = (tableColumns as any).__columnOrder || Object.keys(tableColumns);
 
       //Check if there is any difference in the existing and new columns ids
       if (_.xor(existingColumnIds, newColumnIds).length > 0) {
@@ -422,18 +440,15 @@ export class WDSTableWidget extends BaseWidget<TableWidgetProps, WidgetState> {
         });
 
         /*
-         * If new columnOrders have different values from the original columnOrders
-         * Only update when there are new Columns(Derived or Primary)
+         * When column set changes (add/remove columns), use the query column order.
+         * When column set stays the same, preserve user's manual column order adjustments.
          */
         if (
           !!newColumnIds.length &&
-          !!_.xor(newColumnIds, columnOrder).length &&
           !equal(_.sortBy(newColumnIds), _.sortBy(existingDerivedColumnIds))
         ) {
-          // Maintain original columnOrder and keep new columns at the end
-          let newColumnOrder = _.intersection(columnOrder, newColumnIds);
-
-          newColumnOrder = _.union(newColumnOrder, newColumnIds);
+          // Column set has changed, use the order from newColumnIds (which comes from query order)
+          let newColumnOrder = [...newColumnIds];
 
           const compareColumns = (a: string, b: string) => {
             const aSticky = tableColumns[a].sticky || "none";
