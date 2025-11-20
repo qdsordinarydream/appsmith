@@ -27,53 +27,53 @@ pretty_print()
   echo
 }
 
-# Check whether user had supplied -h or --help. If yes display usage
-if [[ ( $@ == "--help") ||  $@ == "-h" ]]
-then
-  display_help
-  exit 0
-fi
+# # Check whether user had supplied -h or --help. If yes display usage
+# if [[ ( $@ == "--help") ||  $@ == "-h" ]]
+# then
+#   display_help
+#   exit 0
+# fi
 
-LOCAL=false
-if [[ ($1 == "--local" || $1 == "-l")]]
-then
-  LOCAL=true
-fi
+# LOCAL=false
+# if [[ ($1 == "--local" || $1 == "-l")]]
+# then
+#   LOCAL=true
+# fi
 
-REMOTE=false
-if [[ ($1 == "--remote" || $1 == "-r")]]
-then
-  REMOTE=true
-fi
+# REMOTE=false
+# if [[ ($1 == "--remote" || $1 == "-r")]]
+# then
+#   REMOTE=true
+# fi
 
-if [[ ($LOCAL == true) ]]
-then
-  pretty_print "Setting up instance with local changes"
-  BRANCH=release
-  tag=$2
-  cs_url=$3
-elif [[ ($REMOTE == true) ]]
-then
-  pretty_print "Setting up instance with remote repository branch ..."
-  REMOTE_REPOSITORY_URL=$2
-  REMOTE_BRANCH=$3
-  tag=$4
-  pretty_print "Please ignore if the following error occurs: remote remote_origin_for_local_test already exists."
-  git remote add remote_origin_for_local_test $REMOTE_REPOSITORY_URL || git remote set-url remote_origin_for_local_test $REMOTE_REPOSITORY_URL
-  git fetch remote_origin_for_local_test
-  git checkout $REMOTE_BRANCH
-  git pull remote_origin_for_local_test $REMOTE_BRANCH
-else
-  BRANCH=$1
-  tag=$2
-  cs_url=$3
-  pretty_print "Setting up instance to run on branch: $BRANCH"
-  cd "$(dirname "$0")"/..
-  git fetch origin $BRANCH
-  git checkout $BRANCH
-  git pull origin $BRANCH
-  pretty_print "Local branch is now up to date. Starting server build ..."
-fi
+# if [[ ($LOCAL == true) ]]
+# then
+#   pretty_print "Setting up instance with local changes"
+#   BRANCH=release
+#   tag=$2
+#   cs_url=$3
+# elif [[ ($REMOTE == true) ]]
+# then
+#   pretty_print "Setting up instance with remote repository branch ..."
+#   REMOTE_REPOSITORY_URL=$2
+#   REMOTE_BRANCH=$3
+#   tag=$4
+#   pretty_print "Please ignore if the following error occurs: remote remote_origin_for_local_test already exists."
+#   git remote add remote_origin_for_local_test $REMOTE_REPOSITORY_URL || git remote set-url remote_origin_for_local_test $REMOTE_REPOSITORY_URL
+#   git fetch remote_origin_for_local_test
+#   git checkout $REMOTE_BRANCH
+#   git pull remote_origin_for_local_test $REMOTE_BRANCH
+# else
+#   BRANCH=$1
+#   tag=$2
+#   cs_url=$3
+#   pretty_print "Setting up instance to run on branch: $BRANCH"
+#   cd "$(dirname "$0")"/..
+#   git fetch origin $BRANCH
+#   git checkout $BRANCH
+#   git pull origin $BRANCH
+#   pretty_print "Local branch is now up to date. Starting server build ..."
+# fi
 
 # if [[ -z "$tag" ]]; then
 tag=stridemobi
