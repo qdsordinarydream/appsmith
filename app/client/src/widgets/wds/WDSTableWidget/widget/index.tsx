@@ -255,9 +255,9 @@ export class WDSTableWidget extends BaseWidget<TableWidgetProps, WidgetState> {
         // This handles binding scenarios like `{{Table2.tableData.map((currentRow) => (currentRow.id))}}`
         updatedPrimaryColumns[columnId][key] = isString(value)
           ? value.replace(
-              new RegExp(`\\b${oldWidgetName}\\.`, "g"),
-              `${newWidget.widgetName}.`,
-            )
+            new RegExp(`\\b${oldWidgetName}\\.`, "g"),
+            `${newWidget.widgetName}.`,
+          )
           : value;
       }
     }
@@ -344,26 +344,26 @@ export class WDSTableWidget extends BaseWidget<TableWidgetProps, WidgetState> {
         // Use the existing column properties
         newTableColumns[existingColumn.id] = existingColumn;
       } else {
-        const hashedColumnKey = sanitizeKey(columnKey, {
+      const hashedColumnKey = sanitizeKey(columnKey, {
           existingKeys: union(
             existingColumnsKeys,
             Object.keys(newTableColumns),
           ),
-        });
+      });
         // Create column properties for the new column
-        const columnType = getColumnType(tableData, columnKey);
-        const columnProperties = getDefaultColumnProperties(
-          columnKey,
-          hashedColumnKey,
-          index,
-          this.props.widgetName,
-          false,
-          columnType,
-        );
+      const columnType = getColumnType(tableData, columnKey);
+      const columnProperties = getDefaultColumnProperties(
+        columnKey,
+        hashedColumnKey,
+        index,
+        this.props.widgetName,
+        false,
+        columnType,
+      );
 
-        newTableColumns[columnProperties.id] = {
-          ...columnProperties,
-        };
+      newTableColumns[columnProperties.id] = {
+        ...columnProperties,
+      };
       }
     });
 
@@ -401,7 +401,7 @@ export class WDSTableWidget extends BaseWidget<TableWidgetProps, WidgetState> {
       // Store the column order information in the returned object
       // This will be used by updateColumnProperties
       (newTableColumns as any).__columnOrder = newColumnIds;
-      return newTableColumns;
+    return newTableColumns;
     } else {
       return;
     }
@@ -419,10 +419,18 @@ export class WDSTableWidget extends BaseWidget<TableWidgetProps, WidgetState> {
 
     if (tableColumns) {
       const existingColumnIds = Object.keys(primaryColumns);
-      const existingDerivedColumnIds = Object.keys(derivedColumns);
+      // Filter out derived columns (custom columns) to get only the data-driven columns
+      const existingDataColumnIds = existingColumnIds.filter(
+        (id) => !primaryColumns[id].isDerived,
+      );
 
       // Use the explicit column order if provided, otherwise use Object.keys
-      const newColumnIds = (tableColumns as any).__columnOrder || Object.keys(tableColumns);
+      const newColumnIds =
+        (tableColumns as any).__columnOrder || Object.keys(tableColumns);
+      // Filter out derived columns from new columns as well
+      const newDataColumnIds = newColumnIds.filter(
+        (id) => !tableColumns[id].isDerived,
+      );
 
       //Check if there is any difference in the existing and new columns ids
       if (_.xor(existingColumnIds, newColumnIds).length > 0) {
@@ -442,29 +450,29 @@ export class WDSTableWidget extends BaseWidget<TableWidgetProps, WidgetState> {
         /*
          * When column set changes (add/remove columns), use the query column order.
          * When column set stays the same, preserve user's manual column order adjustments.
+         * We compare the sorted list of data-driven columns (excluding custom columns) to detect if the data schema changed.
          */
         if (
-          !!newColumnIds.length &&
-          !equal(_.sortBy(newColumnIds), _.sortBy(existingDerivedColumnIds))
+          !equal(_.sortBy(newDataColumnIds), _.sortBy(existingDataColumnIds))
         ) {
           // Column set has changed, use the order from newColumnIds (which comes from query order)
           let newColumnOrder = [...newColumnIds];
 
-          const compareColumns = (a: string, b: string) => {
-            const aSticky = tableColumns[a].sticky || "none";
-            const bSticky = tableColumns[b].sticky || "none";
+      const compareColumns = (a: string, b: string) => {
+        const aSticky = tableColumns[a].sticky || "none";
+        const bSticky = tableColumns[b].sticky || "none";
 
-            if (aSticky === bSticky) {
-              return 0;
-            }
+        if (aSticky === bSticky) {
+          return 0;
+        }
 
-            return SORT_ORDER[aSticky] - SORT_ORDER[bSticky];
-          };
+        return SORT_ORDER[aSticky] - SORT_ORDER[bSticky];
+      };
 
           // Sort the column order to retain the position of frozen columns
-          newColumnOrder.sort(compareColumns);
+      newColumnOrder.sort(compareColumns);
 
-          propertiesToAdd["columnOrder"] = newColumnOrder;
+      propertiesToAdd["columnOrder"] = newColumnOrder;
 
           /**
            * As the table data changes in Deployed app, we also update the local storage.
@@ -475,38 +483,38 @@ export class WDSTableWidget extends BaseWidget<TableWidgetProps, WidgetState> {
            * To avoid this and to maintain user's sticky columns we use shouldPersistLocalOrderWhenTableDataChanges below
            * so as to avoid updating the local storage on mount.
            **/
-          if (
-            this.props.renderMode === RenderModes.PAGE &&
-            shouldPersistLocalOrderWhenTableDataChanges
-          ) {
-            const leftOrder = newColumnOrder.filter(
-              (col: string) => tableColumns[col].sticky === StickyType.LEFT,
-            );
-            const rightOrder = newColumnOrder.filter(
-              (col: string) => tableColumns[col].sticky === StickyType.RIGHT,
-            );
+      if (
+        this.props.renderMode === RenderModes.PAGE &&
+        shouldPersistLocalOrderWhenTableDataChanges
+      ) {
+        const leftOrder = newColumnOrder.filter(
+          (col: string) => tableColumns[col].sticky === StickyType.LEFT,
+        );
+        const rightOrder = newColumnOrder.filter(
+          (col: string) => tableColumns[col].sticky === StickyType.RIGHT,
+        );
 
-            this.persistColumnOrder(newColumnOrder, leftOrder, rightOrder);
+        this.persistColumnOrder(newColumnOrder, leftOrder, rightOrder);
           }
-        }
+      }
 
-        const propertiesToUpdate: BatchPropertyUpdatePayload = {
-          modify: propertiesToAdd,
-        };
+      const propertiesToUpdate: BatchPropertyUpdatePayload = {
+        modify: propertiesToAdd,
+      };
 
-        const pathsToDelete: string[] = [];
+      const pathsToDelete: string[] = [];
         const columnsIdsToDelete = without(existingColumnIds, ...newColumnIds);
 
         if (!!columnsIdsToDelete.length) {
           columnsIdsToDelete.forEach((id: string) => {
-            if (!primaryColumns[id].isDerived) {
-              pathsToDelete.push(`primaryColumns.${id}`);
-            }
-          });
-          propertiesToUpdate.remove = pathsToDelete;
+        if (!primaryColumns[id].isDerived) {
+          pathsToDelete.push(`primaryColumns.${id}`);
         }
+      });
+        propertiesToUpdate.remove = pathsToDelete;
+      }
 
-        super.batchUpdateWidgetProperty(propertiesToUpdate, false);
+      super.batchUpdateWidgetProperty(propertiesToUpdate, false);
       }
     }
   };
@@ -634,9 +642,9 @@ export class WDSTableWidget extends BaseWidget<TableWidgetProps, WidgetState> {
       this.props.primaryColumns &&
       (!equal(prevProps.columnOrder, this.props.columnOrder) ||
         filter(prevProps.orderedTableColumns, { isVisible: false }).length !==
-          filter(this.props.orderedTableColumns, { isVisible: false }).length ||
+        filter(this.props.orderedTableColumns, { isVisible: false }).length ||
         getAllStickyColumnsCount(prevProps.orderedTableColumns) !==
-          getAllStickyColumnsCount(this.props.orderedTableColumns))
+        getAllStickyColumnsCount(this.props.orderedTableColumns))
     ) {
       if (this.props.renderMode === RenderModes.CANVAS) {
         super.batchUpdateWidgetProperty(
@@ -677,13 +685,13 @@ export class WDSTableWidget extends BaseWidget<TableWidgetProps, WidgetState> {
       );
 
       if (xor(newColumnIds, primaryColumnIds).length > 0) {
-        const newTableColumns = this.createTablePrimaryColumns();
+      const newTableColumns = this.createTablePrimaryColumns();
 
-        if (newTableColumns) {
-          this.updateColumnProperties(newTableColumns, isTableDataModified);
-        }
+      if (newTableColumns) {
+        this.updateColumnProperties(newTableColumns, isTableDataModified);
+      }
 
-        pushBatchMetaUpdates("filters", []);
+      pushBatchMetaUpdates("filters", []);
       }
     }
 
@@ -1255,14 +1263,14 @@ export class WDSTableWidget extends BaseWidget<TableWidgetProps, WidgetState> {
    * This function just pushes the meta update
    */
   pushOnColumnEvent = ({
-    action,
-    additionalData = {},
-    eventType,
-    onComplete = noop,
-    row,
-    rowIndex,
-    triggerPropertyName,
-  }: OnColumnEventArgs) => {
+                         action,
+                         additionalData = {},
+                         eventType,
+                         onComplete = noop,
+                         row,
+                         rowIndex,
+                         triggerPropertyName,
+                       }: OnColumnEventArgs) => {
     const { filteredTableData = [], pushBatchMetaUpdates } = this.props;
 
     const currentRow = row || filteredTableData[rowIndex];
@@ -1285,14 +1293,14 @@ export class WDSTableWidget extends BaseWidget<TableWidgetProps, WidgetState> {
    * Function to handle customColumn button type click interactions
    */
   onColumnEvent = ({
-    action,
-    additionalData = {},
-    eventType,
-    onComplete = noop,
-    row,
-    rowIndex,
-    triggerPropertyName,
-  }: OnColumnEventArgs) => {
+                     action,
+                     additionalData = {},
+                     eventType,
+                     onComplete = noop,
+                     row,
+                     rowIndex,
+                     triggerPropertyName,
+                   }: OnColumnEventArgs) => {
     if (action) {
       const { commitBatchMetaUpdates } = this.props;
 

@@ -141,27 +141,17 @@ export const removeSpecialChars = (value: string, limit?: number) => {
 export const getAllTableColumnKeys = (
   tableData?: Array<Record<string, unknown>>,
 ) => {
-  if (!_.isArray(tableData) || tableData.length === 0) {
-    return [];
+  const columnKeys: Set<string> = new Set();
+
+  if (_.isArray(tableData)) {
+    tableData.forEach((row) => {
+      Object.keys(row).forEach((key) => {
+        columnKeys.add(key);
+      });
+    });
   }
 
-  // Use the first row's column order as the base (this reflects the SQL SELECT order)
-  const firstRowKeys = Object.keys(tableData[0]);
-  const allKeys = new Set(firstRowKeys);
-
-  // Collect any additional columns from other rows
-  tableData.forEach((row) => {
-    Object.keys(row).forEach((key) => {
-      allKeys.add(key);
-    });
-  });
-
-  // Return first row keys first, then any additional keys found in other rows
-  const additionalKeys = Array.from(allKeys).filter(
-    (key) => !firstRowKeys.includes(key),
-  );
-
-  return [...firstRowKeys, ...additionalKeys];
+  return Array.from(columnKeys);
 };
 
 export function getTableStyles(props: TableStyles) {

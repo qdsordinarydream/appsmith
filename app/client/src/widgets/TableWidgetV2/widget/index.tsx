@@ -759,10 +759,18 @@ class TableWidgetV2 extends BaseWidget<TableWidgetProps, WidgetState> {
 
     if (tableColumns) {
       const existingColumnIds = Object.keys(primaryColumns);
-      const existingDerivedColumnIds = Object.keys(derivedColumns);
+      // Filter out derived columns (custom columns) to get only the data-driven columns
+      const existingDataColumnIds = existingColumnIds.filter(
+        (id) => !primaryColumns[id].isDerived,
+      );
 
       // Use the explicit column order if provided, otherwise use Object.keys
-      const newColumnIds = (tableColumns as any).__columnOrder || Object.keys(tableColumns);
+      const newColumnIds =
+        (tableColumns as any).__columnOrder || Object.keys(tableColumns);
+      // Filter out derived columns from new columns as well, although they usually shouldn't be there yet
+      const newDataColumnIds = newColumnIds.filter(
+        (id) => !tableColumns[id].isDerived,
+      );
 
       //Check if there is any difference in the existing and new columns ids
       if (_.xor(existingColumnIds, newColumnIds).length > 0) {
@@ -782,10 +790,10 @@ class TableWidgetV2 extends BaseWidget<TableWidgetProps, WidgetState> {
         /*
          * When column set changes (add/remove columns), use the query column order.
          * When column set stays the same, preserve user's manual column order adjustments.
+         * We compare the sorted list of data-driven columns (excluding custom columns) to detect if the data schema changed.
          */
         if (
-          !!newColumnIds.length &&
-          !equal(_.sortBy(newColumnIds), _.sortBy(existingDerivedColumnIds))
+          !equal(_.sortBy(newDataColumnIds), _.sortBy(existingDataColumnIds))
         ) {
           // Column set has changed, use the order from newColumnIds (which comes from query order)
           let newColumnOrder = [...newColumnIds];
