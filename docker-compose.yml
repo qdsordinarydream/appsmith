@@ -1,0 +1,13 @@
+# Use for running an Appsmith, during development.
+
+services:
+  appsmith:
+    image: appsmith/appsmith-local-ce:stridemobi
+    container_name: appsmith
+    ports:
+      - "3002:80"
+    environment:
+      APPSMITH_ENCRYPTION_PASSWORD: abcd
+      APPSMITH_ENCRYPTION_SALT: abcd
+    volumes:
+      - ./stacks:/appsmith-stacks

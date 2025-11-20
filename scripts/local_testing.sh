@@ -75,9 +75,9 @@ else
   pretty_print "Local branch is now up to date. Starting server build ..."
 fi
 
-if [[ -z "$tag" ]]; then
-  tag=stridemobi
-fi
+# if [[ -z "$tag" ]]; then
+tag=stridemobi
+# fi
 pretty_print "Building Appsmith with tag: $tag"
 edition=ce
 if [[ "$(git remote get-url origin)" == *"/appsmith-ee"* ]]; then

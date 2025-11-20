@@ -1,4 +1,4 @@
-ARG BASE
+ARG BASE=appsmith/appsmith-local-ce:latest
 FROM ${BASE}
 
 ENV IN_DOCKER=1
