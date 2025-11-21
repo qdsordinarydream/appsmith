@@ -761,15 +761,19 @@ class TableWidgetV2 extends BaseWidget<TableWidgetProps, WidgetState> {
       const existingColumnIds = Object.keys(primaryColumns);
       // Filter out derived columns (custom columns) to get only the data-driven columns
       const existingDataColumnIds = existingColumnIds.filter(
-        (id) => !primaryColumns[id].isDerived,
+        (id: string) => !primaryColumns[id].isDerived,
       );
 
       // Use the explicit column order if provided, otherwise use Object.keys
-      const newColumnIds =
+      let newColumnIds =
         (tableColumns as any).__columnOrder || Object.keys(tableColumns);
+
+      // Sort newColumnIds to ensure consistent order
+      newColumnIds = _.sortBy(newColumnIds);
+
       // Filter out derived columns from new columns as well, although they usually shouldn't be there yet
       const newDataColumnIds = newColumnIds.filter(
-        (id) => !tableColumns[id].isDerived,
+        (id: string) => !tableColumns[id].isDerived,
       );
 
       //Check if there is any difference in the existing and new columns ids
@@ -796,21 +800,25 @@ class TableWidgetV2 extends BaseWidget<TableWidgetProps, WidgetState> {
           !equal(_.sortBy(newDataColumnIds), _.sortBy(existingDataColumnIds))
         ) {
           // Column set has changed, use the order from newColumnIds (which comes from query order)
-          let newColumnOrder = [...newColumnIds];
+          const leftColumns = newColumnIds.filter(
+            (col: string) => tableColumns[col].sticky === StickyType.LEFT,
+          );
+          const rightColumns = newColumnIds.filter(
+            (col: string) => tableColumns[col].sticky === StickyType.RIGHT,
+          );
+          const centerColumns = newColumnIds.filter(
+            (col: string) =>
+              ![
+                StickyType.LEFT,
+                StickyType.RIGHT,
+              ].includes(tableColumns[col].sticky || StickyType.NONE),
+          );
 
-          const compareColumns = (a: string, b: string) => {
-            const aSticky = tableColumns[a].sticky || "none";
-            const bSticky = tableColumns[b].sticky || "none";
-
-            if (aSticky === bSticky) {
-              return 0;
-            }
-
-            return SORT_ORDER[aSticky] - SORT_ORDER[bSticky];
-          };
-
-          // Sort the column order to retain the position of frozen columns
-          newColumnOrder.sort(compareColumns);
+          const newColumnOrder = [
+            ...leftColumns,
+            ...centerColumns,
+            ...rightColumns,
+          ];
 
           propertiesToAdd["columnOrder"] = newColumnOrder;
 
